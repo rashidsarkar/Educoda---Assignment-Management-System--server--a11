@@ -83,6 +83,12 @@ async function run() {
     });
 
     //submited assimengt
+    app.get("/api/user/all-submitted-assignments", async (req, res) => {
+      // const assignmentsInfo = req.body;
+      // console.log(assignmentsInfo);
+      const result = await submittedassignmentsCollection.find().toArray();
+      res.send(result);
+    });
     app.post("/api/user/submitted-assignments", async (req, res) => {
       const assignmentsInfo = req.body;
       console.log(assignmentsInfo);
