@@ -27,12 +27,21 @@ async function run() {
     const featureCollection = client
       .db("educodaDB")
       .collection("featureSection");
+    const assignmentsCollection = client
+      .db("educodaDB")
+      .collection("assignments");
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
     app.get("/api/features", async (req, res) => {
       const result = await featureCollection.find().toArray();
+      res.send(result);
+    });
+    app.post("/api/create-assignments", async (req, res) => {
+      const assignmentsInfo = req.body;
+      console.log(assignmentsInfo);
+      const result = await assignmentsCollection.insertOne(assignmentsInfo);
       res.send(result);
     });
 
