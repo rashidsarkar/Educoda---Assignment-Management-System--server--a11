@@ -44,7 +44,10 @@ async function run() {
       const result = await assignmentsCollection.insertOne(assignmentsInfo);
       res.send(result);
     });
-
+    app.get("/api/all-assignments", async (req, res) => {
+      const result = await assignmentsCollection.find().toArray();
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
