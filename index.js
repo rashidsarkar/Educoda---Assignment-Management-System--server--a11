@@ -24,12 +24,17 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+    const featureCollection = client
+      .db("educodaDB")
+      .collection("featureSection");
+
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
 
-    const productCollection = client
-      .db("educodaDB")
-      .collection("featureSection");
+    app.get("/api/features", async (req, res) => {
+      const result = await featureCollection.find().toArray();
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
