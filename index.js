@@ -45,9 +45,23 @@ async function run() {
       res.send(result);
     });
     app.get("/api/all-assignments", async (req, res) => {
-      const result = await assignmentsCollection.find().toArray();
+      const diffiFromUI = req.query?.difficulty; // Corrected query parameter name
+      let filter = {};
+
+      if (diffiFromUI) {
+        filter = { difficulty: diffiFromUI };
+      }
+      const result = await assignmentsCollection.find(filter).toArray();
       res.send(result);
     });
+    app.get("/api/updated-assignments/:id", async (req, res) => {
+      const id = req.params.id; // Corrected parameter name
+      const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
+
+      const result = await assignmentsCollection.findOne(filter);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
