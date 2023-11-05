@@ -10,8 +10,8 @@ app.use(express.json());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 // const uri = "mongodb://127.0.0.1:27017";
-const uri = "mongodb://127.0.0.1:27017";
-// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ydmxw3q.mongodb.net/?retryWrites=true&w=majority`;
+// const uri = "mongodb://127.0.0.1:27017";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ydmxw3q.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -68,6 +68,14 @@ async function run() {
       const result = await assignmentsCollection.updateOne(filter, {
         $set: updateDoc,
       });
+
+      res.send(result);
+    });
+    app.delete("/api/delete-my-assignments/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
+
+      const result = await assignmentsCollection.deleteOne(filter);
 
       res.send(result);
     });
