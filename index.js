@@ -58,16 +58,34 @@ async function run() {
       const result = await assignmentsCollection.insertOne(assignmentsInfo);
       res.send(result);
     });
+
+    // http://localhost:5000/api/all-assignments?limit=3&page=2
     app.get("/api/all-assignments", async (req, res) => {
-      const diffiFromUI = req.query?.difficulty; // Corrected query parameter name
+      const diffiFromUI = req.query?.difficulty;
+      console.log(req.query); // Corrected query parameter name
+
+      const page = Number(req.query?.page);
+      const limit = Number(req.query?.limit);
+      const skip = (page - 1) * limit;
+
+      let sortObj = {};
       let filter = {};
 
       if (diffiFromUI) {
         filter = { difficulty: diffiFromUI };
       }
-      const result = await assignmentsCollection.find(filter).toArray();
-      res.send(result);
+      const result = await assignmentsCollection
+        .find(filter)
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+      const count = await assignmentsCollection.countDocuments(filter);
+      res.send({ result, count });
+      // res.send(result);
     });
+    // app.get("/productsCount", async(req,res)=>{
+    //   const count = await
+    // });
     app.get("/api/view-assignments/:id", async (req, res) => {
       const id = req.params.id; // Corrected parameter name
       const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
