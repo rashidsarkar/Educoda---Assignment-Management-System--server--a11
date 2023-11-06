@@ -89,9 +89,30 @@ async function run() {
     app.get("/api/user/all-submitted-assignments", async (req, res) => {
       // const assignmentsInfo = req.body;
       // console.log(assignmentsInfo);
-      const result = await submittedassignmentsCollection.find().toArray();
+      const filter = { status: "pending" };
+
+      const result = await submittedassignmentsCollection
+        .find(filter)
+        .toArray();
       res.send(result);
     });
+    //my assingment
+
+    app.get("/api/user/my-submitted-assignments", async (req, res) => {
+      // const assignmentsInfo = req.body;
+      const myAssingment = req.query?.email; // Corrected query parameter name
+      console.log(myAssingment);
+      const filter = { email: myAssingment };
+
+      // console.log(assignmentsInfo);
+      // const filter = { status: "pending" };
+
+      const result = await submittedassignmentsCollection
+        .find(filter)
+        .toArray();
+      res.send(result);
+    });
+
     app.post("/api/user/submitted-assignments", async (req, res) => {
       const assignmentsInfo = req.body;
       console.log(assignmentsInfo);
