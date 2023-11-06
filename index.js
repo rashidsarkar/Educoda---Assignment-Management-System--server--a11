@@ -33,6 +33,9 @@ async function run() {
     const submittedassignmentsCollection = client
       .db("educodaDB")
       .collection("submittedAssignment");
+    const markedassignmentsCollection = client
+      .db("educodaDB")
+      .collection("markedAssignment");
 
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
@@ -102,6 +105,25 @@ async function run() {
       const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
 
       const result = await assignmentsCollection.deleteOne(filter);
+
+      res.send(result);
+    });
+
+    // mark assingment
+
+    app.put("/api/user/marked-assignments/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
+      const updateDoc = req.body;
+      console.log(id, updateDoc);
+      const options = { upsert: true };
+      const result = await submittedassignmentsCollection.updateOne(
+        filter,
+        {
+          $set: updateDoc,
+        },
+        options
+      );
 
       res.send(result);
     });
