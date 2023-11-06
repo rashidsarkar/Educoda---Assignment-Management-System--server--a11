@@ -46,7 +46,7 @@ async function run() {
     });
     app.post("/api/create-assignments", async (req, res) => {
       const assignmentsInfo = req.body;
-      console.log(assignmentsInfo);
+      // console.log(assignmentsInfo);
       const result = await assignmentsCollection.insertOne(assignmentsInfo);
       res.send(result);
     });
@@ -89,6 +89,8 @@ async function run() {
     app.get("/api/user/all-submitted-assignments", async (req, res) => {
       // const assignmentsInfo = req.body;
       // console.log(assignmentsInfo);
+      // const emailFromUI = req.query?.email; // Corrected query parameter name
+      // console.log(emailFromUI);
       const filter = { status: "pending" };
 
       const result = await submittedassignmentsCollection
@@ -100,9 +102,9 @@ async function run() {
 
     app.get("/api/user/my-submitted-assignments", async (req, res) => {
       // const assignmentsInfo = req.body;
-      const myAssingment = req.query?.email; // Corrected query parameter name
+      const myAssingment = req.query?.examineeEmail; // Corrected query parameter name
       console.log(myAssingment);
-      const filter = { email: myAssingment };
+      const filter = { examineeEmail: myAssingment };
 
       // console.log(assignmentsInfo);
       // const filter = { status: "pending" };
@@ -115,7 +117,7 @@ async function run() {
 
     app.post("/api/user/submitted-assignments", async (req, res) => {
       const assignmentsInfo = req.body;
-      console.log(assignmentsInfo);
+      // console.log(assignmentsInfo);
       const result = await submittedassignmentsCollection.insertOne(
         assignmentsInfo
       );
@@ -136,7 +138,7 @@ async function run() {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
       const updateDoc = req.body;
-      console.log(id, updateDoc);
+      // console.log(id, updateDoc);
       const options = { upsert: true };
       const result = await submittedassignmentsCollection.updateOne(
         filter,
