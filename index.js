@@ -71,31 +71,58 @@ async function run() {
     // verify token
 
     // JWT
+    // app.post("/api/auth/access-token", async (req, res) => {
+    //   const user = req.body;
+    //   const token = jwt.sign(user, secret, {
+    //     expiresIn: "1h",
+    //   });
+    //   // console.log(token);
+    //   res
+    //     .cookie("token", token, {
+    //       httpOnly: true,
+    //       secure: process.env.NODE_ENV === "production",
+    //       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    //     })
+    //     .send({ success: true });
+    // });
     app.post("/api/auth/access-token", async (req, res) => {
       const user = req.body;
       const token = jwt.sign(user, secret, {
         expiresIn: "1h",
       });
-      // console.log(token);
-      res
-        .cookie("token", token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-        })
-        .send({ success: true });
+      // Configure cookie settings based on environment
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      };
+      if (process.env.NODE_ENV === "production") {
+        cookieOptions.sameSite = "none";
+      } else {
+        cookieOptions.sameSite = "strict";
+      }
+      res.cookie("token", token, cookieOptions).send({ success: true });
     });
+
     app.post("/api/user/logout", async (req, res) => {
       const user = req.body;
-      // console.log("logging out", user);
-      res
-        .clearCookie("token", {
-          maxAge: 0,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-        })
-        .send({ succsess: true });
+      res.clearCookie("token", {
+        maxAge: 0,
+        secure: process.env.NODE_ENV === "production",
+      });
+      res.send({ success: true });
     });
+
+    // app.post("/api/user/logout", async (req, res) => {
+    //   const user = req.body;
+    //   // console.log("logging out", user);
+    //   res
+    //     .clearCookie("token", {
+    //       maxAge: 0,
+    //       secure: process.env.NODE_ENV === "production",
+    //       sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    //     })
+    //     .send({ succsess: true });
+    // });
     // await client.connect();
 
     app.get("/api/features", async (req, res) => {
