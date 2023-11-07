@@ -85,7 +85,17 @@ async function run() {
         })
         .send({ success: true });
     });
-
+    app.post("/api/user/logout", async (req, res) => {
+      const user = req.body;
+      // console.log("logging out", user);
+      res
+        .clearCookie("token", {
+          maxAge: 0,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ succsess: true });
+    });
     // await client.connect();
 
     app.get("/api/features", async (req, res) => {
@@ -102,7 +112,7 @@ async function run() {
     // http://localhost:5000/api/all-assignments?limit=3&page=2
     app.get("/api/all-assignments", async (req, res) => {
       const diffiFromUI = req.query?.difficulty;
-      console.log(req.query); // Corrected query parameter name
+      // console.log(req.query); // Corrected query parameter name
 
       const page = Number(req.query?.page);
       const limit = Number(req.query?.limit);
