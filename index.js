@@ -1,8 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const jwt = require("jsonwebtoken");
 const app = express();
+const cookieParser = require("cookie-parser");
 const port = process.env.PORT || 5000;
+const secret = process.env.DB_TOKEN;
 
 // middleware
 app.use(
@@ -15,6 +18,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use(cookieParser());
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 // const uri = "mongodb://127.0.0.1:27017";
@@ -29,6 +33,23 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+//getman
+const gateman = (req, res, next) => {
+  const token = req.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ message: "NOT AUTHORIZED" });
+  }
+  jwt.verify(token, secret, function (err, decoded) {
+    if (err) {
+      return res.status(401).send({ message: "NOT AUTHORIZED" });
+    }
+    // console.log(decoded);
+    req.user = decoded;
+
+    next();
+  });
+};
 
 async function run() {
   try {
@@ -46,6 +67,25 @@ async function run() {
       .collection("markedAssignment");
 
     // Connect the client to the server	(optional starting in v4.7)
+    //middlewares
+    // verify token
+
+    // JWT
+    app.post("/api/auth/access-token", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, secret, {
+        expiresIn: "1h",
+      });
+      // console.log(token);
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+    });
+
     // await client.connect();
 
     app.get("/api/features", async (req, res) => {
@@ -86,21 +126,21 @@ async function run() {
     // app.get("/productsCount", async(req,res)=>{
     //   const count = await
     // });
-    app.get("/api/view-assignments/:id", async (req, res) => {
+    app.get("/api/view-assignments/:id", gateman, async (req, res) => {
       const id = req.params.id; // Corrected parameter name
       const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
 
       const result = await assignmentsCollection.findOne(filter);
       res.send(result);
     });
-    app.get("/api/updated-assignments/:id", async (req, res) => {
+    app.get("/api/updated-assignments/:id", gateman, async (req, res) => {
       const id = req.params.id; // Corrected parameter name
       const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
 
       const result = await assignmentsCollection.findOne(filter);
       res.send(result);
     });
-    app.put("/api/updated-my-assignments/:id", async (req, res) => {
+    app.put("/api/updated-my-assignments/:id", gateman, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
       const updateDoc = req.body;
@@ -112,36 +152,70 @@ async function run() {
     });
 
     //submited assimengt
-    app.get("/api/user/all-submitted-assignments", async (req, res) => {
-      // const assignmentsInfo = req.body;
-      // console.log(assignmentsInfo);
-      // const emailFromUI = req.query?.email; // Corrected query parameter name
-      // console.log(emailFromUI);
-      const filter = { status: "pending" };
+    app.get(
+      "/api/user/all-submitted-assignments",
+      gateman,
 
-      const result = await submittedassignmentsCollection
-        .find(filter)
-        .toArray();
-      res.send(result);
-    });
+      async (req, res) => {
+        // const assignmentsInfo = req.body;
+        // console.log(assignmentsInfo);
+        // const emailFromUI = req.query?.email; // Corrected query parameter name
+        // console.log(emailFromUI);
+        const filter = { status: "pending" };
+
+        const result = await submittedassignmentsCollection
+          .find(filter)
+          .toArray();
+        res.send(result);
+      }
+    );
     //my assingment
 
-    app.get("/api/user/my-submitted-assignments", async (req, res) => {
-      // const assignmentsInfo = req.body;
-      const myAssingment = req.query?.examineeEmail; // Corrected query parameter name
-      console.log(myAssingment);
-      const filter = { examineeEmail: myAssingment };
+    // app.get(
+    //   "/api/user/my-submitted-assignments",
+    //   gateman,
+    //   async (req, res) => {
+    //     // const assignmentsInfo = req.body;
 
-      // console.log(assignmentsInfo);
-      // const filter = { status: "pending" };
+    //     const myAssingment = req.query?.examineeEmail; // Corrected query parameter name
+    //     // console.log(myAssingment, req.user);
+    //     if (req.user.email !== myAssignment) {
+    //       return res.status(403).send({ message: "FORBIDDEN ACCESS" });
+    //     }
 
+    //     // return res.status(403).send({ message: "FORBIDDEN ACCESS" });
+    //     const filter = { examineeEmail: myAssingment };
+
+    //     const result = await submittedassignmentsCollection
+    //       .find(filter)
+    //       .toArray();
+    //     res.send(result);
+    //   }
+    app.get("/api/user/my-submitted-assignments", gateman, async (req, res) => {
+      const myAssignment = req.query?.examineeEmail;
+
+      if (req.user.user !== myAssignment) {
+        return res.status(403).send({ message: "FORBIDDEN ACCESS" });
+      }
+      // console.log(req.user.user !== myAssignment);
+
+      const filter = { examineeEmail: myAssignment };
       const result = await submittedassignmentsCollection
         .find(filter)
         .toArray();
       res.send(result);
     });
 
-    app.post("/api/user/submitted-assignments", async (req, res) => {
+    // console.log(assignmentsInfo);
+    // const filter = { status: "pending" };
+
+    // const result = await submittedassignmentsCollection
+    //   .find(filter)
+    //   .toArray();
+    // res.send(result);
+    // );
+
+    app.post("/api/user/submitted-assignments", gateman, async (req, res) => {
       const assignmentsInfo = req.body;
       // console.log(assignmentsInfo);
       const result = await submittedassignmentsCollection.insertOne(
@@ -149,7 +223,7 @@ async function run() {
       );
       res.send(result);
     });
-    app.delete("/api/delete-my-assignments/:id", async (req, res) => {
+    app.delete("/api/delete-my-assignments/:id", gateman, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
 
@@ -160,7 +234,7 @@ async function run() {
 
     // mark assingment
 
-    app.put("/api/user/marked-assignments/:id", async (req, res) => {
+    app.put("/api/user/marked-assignments/:id", gateman, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }; // Assuming you're using MongoDB ObjectId
       const updateDoc = req.body;
