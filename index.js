@@ -107,7 +107,8 @@ async function run() {
       const user = req.body;
       res.clearCookie("token", {
         maxAge: 0,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
+        sameSite: "none",
       });
       res.send({ success: true });
     });
