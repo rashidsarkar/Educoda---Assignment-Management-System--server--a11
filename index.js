@@ -37,6 +37,7 @@ const client = new MongoClient(uri, {
 //getman
 const gateman = (req, res, next) => {
   const token = req.cookies?.token;
+  console.log(token);
   if (!token) {
     return res.status(401).send({ message: "NOT AUTHORIZED" });
   }
@@ -91,16 +92,23 @@ async function run() {
         expiresIn: "1h",
       });
       // Configure cookie settings based on environment
-      const cookieOptions = {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-      };
-      if (process.env.NODE_ENV === "production") {
-        cookieOptions.sameSite = "none";
-      } else {
-        cookieOptions.sameSite = "strict";
-      }
-      res.cookie("token", token, cookieOptions).send({ success: true });
+      // const cookieOptions = {
+      //   httpOnly: true,
+      //   secure: process.env.NODE_ENV === "production",
+      // };
+      // if (process.env.NODE_ENV === "production") {
+      //   cookieOptions.sameSite = "none";
+      // } else {
+      //   cookieOptions.sameSite = "strict";
+      // }
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        })
+        .send({ success: true });
+      // res.cookie("token", token, cookieOptions).send({ success: true });
     });
 
     app.post("/api/user/logout", async (req, res) => {
